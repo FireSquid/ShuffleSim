@@ -32,8 +32,14 @@ int main(int argc, char *argv[]) {
 	// Shuffle one deck into the other a few times
 	std::cout << " --- Shuffle 1 ---\n";
 	ShuffleDeck(sDeck, dDeck);
+
+	PrintDeck(dDeck);
+
 	std::cout << " --- Shuffle 2 ---\n";
 	ShuffleDeck(dDeck, sDeck);
+
+	PrintDeck(sDeck);
+
 	std::cout << " --- Shuffle 3 ---\n";
 	ShuffleDeck(sDeck, dDeck);
 
@@ -88,25 +94,30 @@ void ShuffleDeck(Deck source, Deck dest) {
 	int cutA = 0;			// bottom card of the first half of the cut deck
 	int cutB = cutPosition;	// bottom card of the second half of the cut deck
 	
+	bool nextFromA = ((rand() % 2) > 0);	// If true then the next card inserted into dest will be from cutA, Else it will be from cutB
 
 	// loop to fill up the destination deck with shuffled cards
 	for (int i = 0; i < 52; i++) {
+
+		//std::cout << "Next: " << source[cutA] << " - " << source[cutB] << "\n";
+
 		if (cutA == cutPosition) {	// half A of the cards is empty so the next card is from half B
 			dest[i] = source[cutB++];
-			std::cout << "\t" << dest[i] << "\n";
+			
 		}
 		else if (cutB == 52) {
 			dest[i] = source[cutA++];	// half B of the cards is empty so the next card is from half A
-			std::cout << dest[i] << "\n";
 		}
-		else if ((rand() % 2) == 0) {	// randomly selected for the next card to come from half A
-			dest[i] = source[cutA++];
-			std::cout << dest[i] << "\n";
+		else {	// next card will come from the currently selected cut
+			dest[i] = source[(nextFromA)?(cutA++):(cutB++)];
 		}
-		else {	// randomly selected for the next card to come from half B
-			dest[i] = source[cutB++];
-			std::cout << "\t" << dest[i] << "\n";
-		}
+
+		// Print out the next card inserted to visualize the algorithm
+		std::cout << ((nextFromA) ? "" : "\t") << dest[i] << "\n";
+
+		// Decide randomly whether or not to switch to taking cards from the other cut.
+			//	Half the time the switch will happen
+		nextFromA = (rand() % 2 > 0) ? (!nextFromA) : (nextFromA);
 	}
 	std::cout << "\n";
 }

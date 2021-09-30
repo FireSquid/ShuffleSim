@@ -1,3 +1,3 @@
 ﻿  main.cpp
-g:\githubrepositories\shufflesim\shufflesim\shufflesim\main.cpp(84): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+g:\githubrepositories\shufflesim\shufflesim\shufflesim\main.cpp(90): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
   ShuffleSim.vcxproj -> G:\GitHubRepositories\ShuffleSim\ShuffleSim\Debug\ShuffleSim.exe
