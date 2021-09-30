@@ -22,34 +22,26 @@ void ResetDeck(Deck d);
 void ShuffleDeck(Deck source, Deck dest);
 void PrintDeck(Deck d);
 
+void SimulateShuffles(int shuffles, int steps);
+
 
 int main(int argc, char *argv[]) {
 
-	// Create 2 new decks
-	Deck sDeck = CreateDeck();
-	Deck dDeck = CreateDeck();
+	// Reseed the random number generator
+	srand(time(NULL));
 
-	// Shuffle one deck into the other a few times
-	std::cout << " --- Shuffle 1 ---\n";
-	ShuffleDeck(sDeck, dDeck);
-
-	PrintDeck(dDeck);
-
-	std::cout << " --- Shuffle 2 ---\n";
-	ShuffleDeck(dDeck, sDeck);
-
-	PrintDeck(sDeck);
-
-	std::cout << " --- Shuffle 3 ---\n";
-	ShuffleDeck(sDeck, dDeck);
-
-	// Print out the resulting shuffled deck
-	PrintDeck(dDeck);
-
-	// Delete the 2 decks
-	DeleteDeck(sDeck);
-	DeleteDeck(dDeck);
-
+	std::cout << "\n\n -- 2 Shuffles --\n";
+	SimulateShuffles(2, 100000);
+	std::cout << "\n\n -- 3 Shuffles --\n";
+	SimulateShuffles(3, 100000);
+	std::cout << "\n\n -- 4 Shuffles --\n";
+	SimulateShuffles(4, 100000);
+	std::cout << "\n\n -- 5 Shuffles --\n";
+	SimulateShuffles(5, 100000);
+	std::cout << "\n\n -- 6 Shuffles --\n";
+	SimulateShuffles(6, 100000);
+	std::cout << "\n\n -- 7 Shuffles --\n";
+	SimulateShuffles(7, 100000);
 
 	return 0;
 }
@@ -86,9 +78,6 @@ void ResetDeck(Deck d) {
 //	Each step is printed out.
 void ShuffleDeck(Deck source, Deck dest) {
 
-	// Reseed the random number generator
-	srand(time(NULL));
-
 	int cutPosition = 26;	// position to cut the cards in
 
 	int cutA = 0;			// bottom card of the first half of the cut deck
@@ -113,13 +102,12 @@ void ShuffleDeck(Deck source, Deck dest) {
 		}
 
 		// Print out the next card inserted to visualize the algorithm
-		std::cout << ((nextFromA) ? "" : "\t") << dest[i] << "\n";
+		//std::cout << ((nextFromA) ? "" : "\t") << dest[i] << "\n";
 
 		// Decide randomly whether or not to switch to taking cards from the other cut.
 			//	Half the time the switch will happen
-		nextFromA = (rand() % 2 > 0) ? (!nextFromA) : (nextFromA);
+		nextFromA = (rand() % 3 > 0) ? (!nextFromA) : (nextFromA);
 	}
-	std::cout << "\n";
 }
 
 // Print out the deck of cards as a space separated string of numbers
@@ -130,4 +118,93 @@ void PrintDeck(Deck d) {
 	}
 
 	std::cout << "\n\n";
+}
+
+// Simulates shuffling a deck of cards "shuffles" times and collects the resulting positions of the cards.
+//	Repeats the simulation "steps" times and reports the mean variance of the card at each position
+void SimulateShuffles(int shuffles, int steps) {
+	// Create 2 decks
+	Deck DeckA = CreateDeck();
+	Deck DeckB = CreateDeck();
+
+	// If true then use A as the source deck when shuffling, otherwise use B
+	bool AisSource = true;
+
+	// Array counting the number of occurances of each card at each position
+	int** data = new int*[52];
+	for (int i = 0; i < 52; i++) {
+		data[i] = new int[52];	// Array counting the number of occurances of each card at position i
+
+		// Fill in the data with zeroes
+		for (int j = 0; j < 52; j++)
+			data[i][j] = 0;
+	}
+
+
+	// Run the simulation
+	for (int i = 0; i < steps; i++) {
+
+		// Prepare the next step
+		ResetDeck(DeckA);
+		ResetDeck(DeckB);
+
+		// Perform the shuffles for the step
+		for (int j = 0; j < shuffles; j++) {
+			if (AisSource)
+				ShuffleDeck(DeckA, DeckB);
+			else
+				ShuffleDeck(DeckB, DeckA);
+
+			// Switch decks
+			AisSource = !AisSource;
+		}
+
+		// Note the position where each card landed
+		for (int j = 0; j < 52; j++)
+			data[j][(AisSource) ? (DeckA[j]) : (DeckB[j])] += 1;
+
+	}
+
+	/*for (int i = 0; i < 52; i++) {
+		std::cout << "Pos " << i << ":";
+		for (int j = 0; j < 52; j++) {
+			std::cout << " " << data[i][j];
+		}
+	}*/
+
+	// Expected chance of each card appearing in each position
+	float exApp = 1 / 52.0f;
+
+	// Sum of the variances of each position
+	float sumVar = 0.0f;
+
+	// Calculate the variance of cards appearing in each position
+	float* variance = new float[52];
+	for (int i = 0; i < 52; i++) {
+		float totalSqDif = 0;	// total square difference between the number of appearances of each card and the expected appearances
+
+		// Get the square difference for each card
+		for (int j = 0; j < 52; j++) {
+			float appChance = data[i][j] / (float)steps;	// Chance of card j appearing in position i
+			totalSqDif += (appChance - exApp) * (appChance - exApp);
+		}
+
+		// Calculate the position's variance
+		variance[i] = totalSqDif / 52;
+
+		sumVar += variance[i];
+	}
+
+	std::cout << "-- Average Variance: " << (sumVar / 52) << "\n\n";
+
+
+	// Cleanup the data and variance arrays
+	for (int i = 0; i < 52; i++)
+		delete[] data[i];
+	delete[] data;
+	delete [] variance;
+
+	// Deallocate the decks
+	DeleteDeck(DeckA);
+	DeleteDeck(DeckB);
 }
