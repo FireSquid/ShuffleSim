@@ -30,6 +30,21 @@ int main(int argc, char *argv[]) {
 	// Reseed the random number generator
 	srand(time(NULL));
 
+	/*	Test shuffling one deck back and forth
+	Deck A = CreateDeck();
+	Deck B = CreateDeck();
+
+	ShuffleDeck(A, B);
+	std::cout << "-------------------\n";
+	ShuffleDeck(B, A);
+	std::cout << "-------------------\n";
+	ShuffleDeck(A, B);
+
+	DeleteDeck(A);
+	DeleteDeck(B);
+	*/
+
+	
 	std::cout << "\n\n -- 2 Shuffles --\n";
 	SimulateShuffles(2, 100000);
 	std::cout << "\n\n -- 3 Shuffles --\n";
@@ -76,37 +91,40 @@ void ResetDeck(Deck d) {
 
 // Shuffle the cards of the source deck, storing the results in the destination deck.
 //	Each step is printed out.
-void ShuffleDeck(Deck source, Deck dest) {
+void ShuffleDeck(Deck source, Deck dest) {	
 
-	int cutPosition = 26;	// position to cut the cards in
+	int cutPosition = 26 + (rand() % 3 - 1) + (rand() % 3 - 1) + (rand() % 3 - 1) + (rand() % 3 - 1);	// position to cut the cards in (between 22 and 30 with approximately normal distribution)
 
-	int cutA = 0;			// bottom card of the first half of the cut deck
-	int cutB = cutPosition;	// bottom card of the second half of the cut deck
+	// Position in source of the bottom cards of the two cuts of the deck
+	int cutA = 0;
+	int cutB = cutPosition;
 	
-	bool nextFromA = ((rand() % 2) > 0);	// If true then the next card inserted into dest will be from cutA, Else it will be from cutB
 
 	// loop to fill up the destination deck with shuffled cards
 	for (int i = 0; i < 52; i++) {
 
-		//std::cout << "Next: " << source[cutA] << " - " << source[cutB] << "\n";
+		// Number of 
+		int sizeA = cutPosition - cutA;
 
-		if (cutA == cutPosition) {	// half A of the cards is empty so the next card is from half B
+		// If one of the cuts is empty then take the next card from the non-empty cut
+		if (cutA == cutPosition) {
 			dest[i] = source[cutB++];
-			
+			//std::cout << "\t" << dest[i] << "\n";
 		}
 		else if (cutB == 52) {
-			dest[i] = source[cutA++];	// half B of the cards is empty so the next card is from half A
-		}
-		else {	// next card will come from the currently selected cut
-			dest[i] = source[(nextFromA)?(cutA++):(cutB++)];
+			dest[i] = source[cutA++];
+			//std::cout << dest[i] << "\n";
 		}
 
-		// Print out the next card inserted to visualize the algorithm
-		//std::cout << ((nextFromA) ? "" : "\t") << dest[i] << "\n";
-
-		// Decide randomly whether or not to switch to taking cards from the other cut.
-			//	Half the time the switch will happen
-		nextFromA = (rand() % 3 > 0) ? (!nextFromA) : (nextFromA);
+		// Randomly take the next card from the cuts with a probability proportional to the size of each cut
+		else if (rand() % (52 - i) < sizeA) {
+			dest[i] = source[cutA++];
+			//std::cout << dest[i] << "\n";
+		}
+		else {
+			dest[i] = source[cutB++];
+			//std::cout << "\t" << dest[i] << "\n";
+		}
 	}
 }
 
@@ -123,6 +141,7 @@ void PrintDeck(Deck d) {
 // Simulates shuffling a deck of cards "shuffles" times and collects the resulting positions of the cards.
 //	Repeats the simulation "steps" times and reports the mean variance of the card at each position
 void SimulateShuffles(int shuffles, int steps) {
+
 	// Create 2 decks
 	Deck DeckA = CreateDeck();
 	Deck DeckB = CreateDeck();
